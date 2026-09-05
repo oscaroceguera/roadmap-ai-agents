@@ -1,0 +1,19 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Hábitos de estudio" [level=1] [ref=e4]
+    - paragraph [ref=e5]: Crea hábitos, márcalos como hechos hoy y sigue tu racha de días consecutivos.
+  - region [ref=e6]:
+    - heading "Crear hábito" [level=2] [ref=e7]
+    - generic [ref=e8]:
+      - generic [ref=e9]: Nombre del hábito
+      - textbox "Nombre del hábito" [ref=e10]:
+        - /placeholder: Ej. Leer 20 minutos
+      - button "Crear" [ref=e11]
+  - region [ref=e12]:
+    - heading "Mis hábitos" [level=2] [ref=e13]
+    - list [ref=e14]:
+      - listitem [ref=e15]:
+        - generic [ref=e16]:
+          - paragraph [ref=e17]: leer 20 min
+          - paragraph [ref=e18]: "Racha actual: 1 día · Hecho hoy"
+        - button "Hecho hoy" [disabled] [ref=e20]
