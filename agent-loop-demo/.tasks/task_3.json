@@ -1,0 +1,10 @@
+{
+  "id": 3,
+  "subject": "Write tests",
+  "description": "Create unit and integration tests to validate the application's behavior.",
+  "status": "pending",
+  "blockedBy": [
+    2
+  ],
+  "owner": ""
+}

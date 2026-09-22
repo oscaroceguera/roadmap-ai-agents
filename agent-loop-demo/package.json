@@ -1,0 +1,39 @@
+{
+  "name": "loopitos",
+  "version": "1.0.0",
+  "bin": {
+    "loopitos": "./index.ts"
+  },
+  "module": "index.ts",
+  "private": "true",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.24.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@11.24.0",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.71",
+    "@earendil-works/pi-tui": "^0.86.1",
+    "@lmnr-ai/lmnr": "^0.8.47",
+    "ai": "^7.0.107",
+    "chalk": "^6.0.0",
+    "dotenv": "^18.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2"
+  }
+}
