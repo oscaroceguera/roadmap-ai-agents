@@ -1,0 +1,38 @@
+{
+  "name": "mini-coder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx --env-file=.env src/cli.ts",
+    "scratch": "rm -rf /tmp/mc-scratch && cp -R fixtures/toy-repo /tmp/mc-scratch && echo \"playground reset: /tmp/mc-scratch\"",
+    "typecheck": "tsc --noEmit",
+    "test:smoke": "vitest run test/",
+    "check": "tsc --noEmit && vitest run test/",
+    "eval": "vitest run evals/",
+    "eval:security": "vitest run evals/ -t security"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.24.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@11.24.0",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.124",
+    "ai": "^6.0.300",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
