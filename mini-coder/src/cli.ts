@@ -1,6 +1,12 @@
+import { readFile } from "./tools/readFile";
+import { writeFile } from "./tools/writeFile";
 import { resolveInWorkspace } from "./workspace";
 
 const [cmd, ...args] = process.argv.slice(2);
+const direct: Record<string, (input: any) => Promise<unknown>> = {
+  read_file: readFile,
+  write_file: writeFile,
+};
 
 switch (cmd) {
   case "hello":
@@ -12,6 +18,9 @@ switch (cmd) {
     } catch (e) {
       console.log("🚫", (e as Error).message);
     }
+    break;
+  case "tool":
+    console.log(await direct[args[0]](JSON.parse(args[1] ?? "{}")));
     break;
   default:
     console.log(`unknown command: ${cmd ?? "(none)"}`);
