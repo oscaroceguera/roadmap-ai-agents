@@ -1,3 +1,3 @@
 export function formatCents(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `$${Math.round(cents / 100)}`;
 }
