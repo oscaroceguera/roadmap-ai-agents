@@ -1,0 +1,9 @@
+{"type":"workflow.started","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","task":"find the bug","ts":1791248664186}
+{"type":"turn.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","turn":0,"usage":{"inputTokens":10,"inputTokenDetails":{},"outputTokens":1,"outputTokenDetails":{},"totalTokens":11},"ms":19.55800000000005,"finishReason":"tool-calls","ts":1791248664207}
+{"type":"tool.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","tool":"grep","ok":true,"ts":1791248664235}
+{"type":"turn.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","turn":1,"usage":{"inputTokens":10,"inputTokenDetails":{},"outputTokens":1,"outputTokenDetails":{},"totalTokens":11},"ms":4.6152079999999955,"finishReason":"tool-calls","ts":1791248664240}
+{"type":"tool.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","tool":"read_file","ok":true,"ts":1791248664241}
+{"type":"turn.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","turn":2,"usage":{"inputTokens":10,"inputTokenDetails":{},"outputTokens":1,"outputTokenDetails":{},"totalTokens":11},"ms":1.4080410000000256,"finishReason":"tool-calls","ts":1791248664242}
+{"type":"tool.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","tool":"bash","ok":true,"ts":1791248666287}
+{"type":"turn.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","turn":3,"usage":{"inputTokens":10,"inputTokenDetails":{},"outputTokens":1,"outputTokenDetails":{},"totalTokens":11},"ms":2.144416999999976,"finishReason":"stop","ts":1791248666290}
+{"type":"workflow.completed","runId":"b0c2cc16-a833-414e-a036-79e4b4548b57","stop":"completed","output":"Scripted demo: formatCents lives in src/money.ts and 3 tests fail.","ts":1791248666290}

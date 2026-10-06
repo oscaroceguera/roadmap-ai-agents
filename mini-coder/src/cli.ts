@@ -5,6 +5,8 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { EVENTS_FILE } from "./events";
+import { runAgent } from "./loop";
+import { demoModel } from "./mockModel";
 import { MODEL_ID } from "./model";
 import { runTool } from "./tools/run";
 import { ROOT, resolveInWorkspace } from "./workspace";
@@ -65,6 +67,16 @@ switch (cmd) {
         JSON.stringify(rest).slice(0, 100),
       );
     }
+    break;
+  }
+  case "run": {
+    const mock = args[0] === "--mock";
+    const task = args.slice(mock ? 1 : 0).join(" ");
+    if (!task) {
+      console.error('usage: pnpm start run [--mock] "<task>"');
+      process.exit(1);
+    }
+    console.log(await runAgent(task, mock ? { model: demoModel() } : {}));
     break;
   }
   default:
