@@ -9,8 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test:smoke": "vitest run test/",
     "check": "tsc --noEmit && vitest run test/",
-    "eval": "vitest run evals/",
-    "eval:security": "vitest run evals/ -t security"
+    "eval": "node --env-file=.env node_modules/vitest/vitest.mjs run evals/ --silent=false",
+    "eval:security": "node --env-file=.env node_modules/vitest/vitest.mjs run evals/ --silent=false -t security"
   },
   "keywords": [],
   "author": "",
