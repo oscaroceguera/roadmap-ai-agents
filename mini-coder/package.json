@@ -27,6 +27,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.124",
     "ai": "^6.0.300",
+    "drizzle-orm": "^0.45.3",
+    "postgres": "^3.4.9",
     "zod": "^4.6.5"
   },
   "devDependencies": {

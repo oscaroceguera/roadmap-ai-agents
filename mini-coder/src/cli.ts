@@ -3,8 +3,14 @@
 //import { readFile } from "./tools/readFile";
 // import { writeFile } from "./tools/writeFile";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { EVENTS_FILE } from "./events";
+// import { existsSync, readFileSync } from "node:fs";
+import {
+  closeEvents,
+  costByRun,
+  EVENTS_FILE,
+  readEvents,
+  SINK,
+} from "./events";
 import { runAgent } from "./loop";
 import { demoModel } from "./mockModel";
 import { MODEL_ID } from "./model";
@@ -36,11 +42,17 @@ switch (cmd) {
     break;
   case "doctor": {
     const rg = spawnSync("rg", ["--version"]);
+    const dbUrl = process.env.DATABASE_URL;
 
     console.log({
       model: MODEL_ID,
       workspace: ROOT,
-      events: EVENTS_FILE,
+      events: SINK === "jsonl" ? EVENTS_FILE : "postgres (event_log)",
+      database: !dbUrl
+        ? "MISSING"
+        : dbUrl.includes("-pooler")
+          ? "POOLED url: use the direct one (no --pooler)"
+          : "set",
       apiKey: process.env.OPENAI_API_KEY ? "set" : "MISSING",
       ripgrep: rg.status === 0 ? "ok" : "MISSING",
     });
@@ -48,18 +60,10 @@ switch (cmd) {
     break;
   }
   case "log": {
-    if (!existsSync(EVENTS_FILE)) {
-      console.log("(no events yet)");
-      break;
-    }
+    const events = await readEvents(Number(args[0] ?? 20));
+    if (events.length === 0) console.log("(no events yet)");
 
-    const lines = readFileSync(EVENTS_FILE, "utf-8")
-      .trim()
-      .split("\n")
-      .slice(-Number(args[0] ?? 20));
-
-    for (const line of lines) {
-      const { ts, type, runId, ...rest } = JSON.parse(line);
+    for (const { ts, type, runId, ...rest } of events) {
       console.log(
         new Date(ts).toISOString().slice(11, 19),
         runId.slice(0, 8),
@@ -79,7 +83,12 @@ switch (cmd) {
     console.log(await runAgent(task, mock ? { model: demoModel() } : {}));
     break;
   }
+  case "cost":
+    console.table(await costByRun(Number(args[0] ?? 5)));
+    break;
   default:
     console.log(`unknown command: ${cmd ?? "(none)"}`);
     process.exit(1);
 }
+
+await closeEvents();

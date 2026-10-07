@@ -35,7 +35,7 @@ export async function runAgent(
   const messages: ModelMessage[] = [{ role: "user", content: task }];
   let tokens = 0;
   let consecutiveErrors = 0;
-  emit({ type: "workflow.started", runId, task });
+  await emit({ type: "workflow.started", runId, task });
 
   for (let turn = 0; turn < LIMITS.maxIterations; turn++) {
     const t0 = performance.now();
@@ -50,7 +50,7 @@ export async function runAgent(
 
     tokens += (res.usage.inputTokens ?? 0) + (res.usage.outputTokens ?? 0);
     messages.push(...res.response.messages);
-    emit({
+    await emit({
       type: "turn.completed",
       runId,
       turn,
@@ -77,7 +77,7 @@ export async function runAgent(
 
       consecutiveErrors = out.ok ? 0 : consecutiveErrors + 1;
 
-      emit({
+      await emit({
         type: "tool.completed",
         runId,
         toolCallId: call.toolCallId,
@@ -110,8 +110,8 @@ function toolResultPart(
 }
 
 // Every exit goes through here, so every stop is a named, logged event. No bare `break`.
-function finish(runId: string, stop: StopReason, output?: string) {
-  emit({ type: "workflow.completed", runId, stop, output });
+async function finish(runId: string, stop: StopReason, output?: string) {
+  await emit({ type: "workflow.completed", runId, stop, output });
 
   return { stop, output };
 }
