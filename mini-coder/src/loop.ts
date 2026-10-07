@@ -5,7 +5,7 @@ import {
   type ModelMessage,
 } from "ai";
 import { emit } from "./events";
-import { model as defaultModel } from "./model";
+import { model as defaultModel, PRICE_PER_1M } from "./model";
 import { SYSTEM_PROMPT } from "./prompt";
 import { tools } from "./tools";
 import { runTool, type ToolOutput } from "./tools/run";
@@ -54,7 +54,12 @@ export async function runAgent(
       type: "turn.completed",
       runId,
       turn,
-      usage: res.usage,
+      inputTokens: res.usage.inputTokens ?? 0,
+      outputTokens: res.usage.outputTokens ?? 0,
+      costUsd:
+        ((res.totalUsage.inputTokens ?? 0) * PRICE_PER_1M.input +
+          (res.usage.outputTokens ?? 0) * PRICE_PER_1M.output) /
+        1_000_1000,
       ms: performance.now() - t0,
       finishReason: res.finishReason,
     });
@@ -67,9 +72,20 @@ export async function runAgent(
 
     const results = [];
     for (const call of res.toolCalls) {
+      const t1 = performance.now();
       const out = await runTool(call.toolName, call.input);
+
       consecutiveErrors = out.ok ? 0 : consecutiveErrors + 1;
-      emit({ type: "tool.completed", runId, tool: call.toolName, ok: out.ok });
+
+      emit({
+        type: "tool.completed",
+        runId,
+        toolCallId: call.toolCallId,
+        tool: call.toolName,
+        ok: out.ok,
+        ms: performance.now() - t1,
+      });
+
       results.push(toolResultPart(call, out));
     }
     messages.push({ role: "tool", content: results }); // ONE message for all results of this turn

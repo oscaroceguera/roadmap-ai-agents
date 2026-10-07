@@ -1,4 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { EVENTS_FILE } from "../src/events";
 import { runAgent } from "../src/loop";
 import { scriptedModel } from "../src/mockModel";
 
@@ -38,5 +40,24 @@ describe("loop exits — every stop is named", () => {
   it("max_iterations: never stops calling tools", async () => {
     const model = scriptedModel(() => ({ call: readOk }));
     expect((await runAgent("hi", { model })).stop).toBe("max_iterations");
+  });
+});
+
+describe("event log", () => {
+  it("every turn.completed has a numeric costUsd", async () => {
+    // 3 turns: two tool calls, then an answer
+    const model = scriptedModel((n) =>
+      n < 2 ? { call: readOk } : { text: "done" },
+    );
+    await runAgent("hi", { model, runId: "cost-test" });
+
+    const turns = readFileSync(EVENTS_FILE, "utf-8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line))
+      .filter((e) => e.runId === "cost-test" && e.type === "turn.completed");
+
+    expect(turns).toHaveLength(3);
+    for (const t of turns) expect(Number.isFinite(t.costUsd)).toBe(true);
   });
 });

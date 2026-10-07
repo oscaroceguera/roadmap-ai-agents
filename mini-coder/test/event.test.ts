@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { expect, it } from "vitest";
-import { emit } from "../src/events";
+import { type AgentEvent, emit } from "../src/events";
 
 it("emit appends one JSON line with a timestamp", () => {
   emit({ type: "workflow.started", runId: "r1", task: "t" });
@@ -13,4 +13,10 @@ it("emit appends one JSON line with a timestamp", () => {
     runId: "r1",
     ts: expect.any(Number),
   });
+});
+
+it("the event type catches typos at compile time", () => {
+  // @ts-expect-error: a misspelled event type must not compile
+  const bad: AgentEvent = { type: "turn.completed", runId: "r" };
+  expect(bad).toBeDefined();
 });
