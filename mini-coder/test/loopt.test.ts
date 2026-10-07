@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { EVENTS_FILE } from "../src/events";
-import { runAgent } from "../src/loop";
+import { runAgent, type Step } from "../src/loop";
 import { scriptedModel } from "../src/mockModel";
 
 const readOk = { name: "read_file", input: { path: "src/money.ts" } };
@@ -59,5 +59,30 @@ describe("event log", () => {
 
     expect(turns).toHaveLength(3);
     for (const t of turns) expect(Number.isFinite(t.costUsd)).toBe(true);
+  });
+});
+
+describe("checkpoints", () => {
+  it("every side effect goes through step(): these names become DBOS checkpoints", async () => {
+    const names: string[] = [];
+    const recordingStep: Step = (name, fn) => {
+      names.push(name);
+      return fn();
+    };
+
+    const model = scriptedModel((n) =>
+      n < 2 ? { call: readOk } : { text: "done" },
+    );
+
+    await runAgent("hi", { model, step: recordingStep });
+    expect(names).toEqual([
+      "started",
+      "model-0",
+      "tool-call-1",
+      "model-1",
+      "tool-call-2",
+      "model-2",
+      "finish",
+    ]);
   });
 });
