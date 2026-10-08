@@ -12,6 +12,7 @@ import {
   readEvents,
   SINK,
 } from "./events";
+import { policy } from "./gate";
 import { runAgent } from "./loop";
 import { demoModel } from "./mockModel";
 import { MODEL_ID } from "./model";
@@ -152,6 +153,21 @@ switch (cmd) {
   case "cost":
     console.table(await costByRun(Number(args[0] ?? 5)));
     break;
+
+  case "gate": {
+    const input = args[0] === "bash" ? { command: args[1] ?? "" } : {};
+
+    console.log(
+      policy(
+        { toolName: args[0], input },
+        {
+          autoApproveWrites: false,
+        },
+      ),
+    );
+
+    break;
+  }
   default:
     console.log(`unknown command: ${cmd ?? "(none)"}`);
     process.exit(1);
