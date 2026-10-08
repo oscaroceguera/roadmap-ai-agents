@@ -31,6 +31,7 @@ export type AgentEvent =
       type: "memory.compacted";
       runId: string;
       summarizedTurns: number;
+      clippedResults: number;
       contextTokens: number;
     }
   | {

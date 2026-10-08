@@ -1,9 +1,24 @@
+// src/loop.ts — Step 14: Step 12's durable loop + the hydrator (compact, then hydrate, before every model call).
 import {
   generateText,
   type JSONValue,
   type LanguageModel,
   type ModelMessage,
 } from "ai";
+import {
+  buildContext,
+  clipToolResults,
+  splitTurns,
+  type TurnMessages,
+} from "./context/hydrate";
+import {
+  budgetFor,
+  COMPACTION,
+  type Compaction,
+  WINDOW,
+} from "./context/modelLimits";
+import { summarize } from "./context/summarize";
+import { estimateText, estimateTokens } from "./context/tokens";
 import { emit } from "./events";
 import { model as defaultModel, PRICE_PER_1M } from "./model";
 import { SYSTEM_PROMPT } from "./prompt";
@@ -48,23 +63,68 @@ export async function runAgent(
     model = defaultModel,
     runId = crypto.randomUUID(),
     step = justRun,
-  }: { model?: LanguageModel; runId?: string; step?: Step } = {},
+    window = WINDOW,
+    compaction = COMPACTION,
+    summaryModel = model,
+  }: {
+    model?: LanguageModel;
+    runId?: string;
+    step?: Step;
+    window?: number; // tests pass a tiny window so compaction fires for free
+    compaction?: Compaction; // "summarize" | "truncate"
+    summaryModel?: LanguageModel; // who writes the summary (tests pass a second mock)
+  } = {},
 ) {
   // Everything OUTSIDE a step must be deterministic: on recovery it runs again and must take the
   // same path. So no Date.now(), random numbers or file reads here; those live inside steps.
-  const messages: ModelMessage[] = [{ role: "user", content: task }];
+  // History is kept as TURNS (model message + its tool results), so compaction can drop whole turns.
+  // The task is NOT in `turns`: buildContext() pins it first, every time.
+  let turns: TurnMessages[] = [];
+  let summary = "";
+  const budget = budgetFor(window);
+  const contextTokens = () =>
+    estimateText(SYSTEM_PROMPT) +
+    estimateTokens(buildContext(task, summary, turns));
   let tokens = 0;
   let consecutiveErrors = 0;
 
   await step("started", () => emit({ type: "workflow.started", runId, task }));
 
   for (let turn = 0; turn < LIMITS.maxIterations; turn++) {
+    // 1. Too big? Compact BEFORE calling the model. Trigger on a token estimate, never on a turn count.
+    if (contextTokens() > budget.compactAt) {
+      // Pure functions: same input → same result, so a DBOS replay takes exactly the same path.
+      const { old, recent } = splitTurns(turns, budget.keepRecent); // a. drop or summarize old turns
+      const fitted = clipToolResults(recent, budget.keepRecent); // b. still too big? clip old tool results
+      if (old.length > 0 || fitted.clipped > 0) {
+        summary = await step(`compact-${turn}`, async () => {
+          const next =
+            old.length > 0 && compaction === "summarize"
+              ? await summarize(summaryModel, old, summary)
+              : summary;
+          await emit({
+            type: "memory.compacted",
+            runId,
+            summarizedTurns: old.length,
+            clippedResults: fitted.clipped,
+            contextTokens:
+              estimateText(SYSTEM_PROMPT) +
+              estimateTokens(buildContext(task, next, fitted.turns)),
+          });
+          return next;
+        });
+        turns = fitted.turns;
+      }
+    }
+
+    // 2. Hydrate: build this turn's context fresh (pinned task + summary + recent turns), then call the model.
+    const context = buildContext(task, summary, turns);
     const res = await step(`model-${turn}`, () =>
-      modelTurn(model, messages, runId, turn),
+      modelTurn(model, context, runId, turn),
     );
 
     tokens += res.tokens;
-    messages.push(...res.responseMessages);
+    const thisTurn: TurnMessages = [...res.responseMessages];
 
     if (res.toolCalls.length === 0) {
       const reason =
@@ -83,7 +143,8 @@ export async function runAgent(
       results.push(toolResultPart(call, out));
     }
 
-    messages.push({ role: "tool", content: results }); // ONE message for all results of this turn
+    thisTurn.push({ role: "tool", content: results }); // ONE message for all results of this turn
+    turns.push(thisTurn); // the call and its results: kept or dropped together
 
     if (consecutiveErrors >= LIMITS.maxConsecutiveErrors)
       return finish(step, runId, "error_threshold");
