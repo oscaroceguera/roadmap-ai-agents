@@ -1,4 +1,6 @@
 // src/loop.ts — Step 14: Step 12's durable loop + the hydrator (compact, then hydrate, before every model call).
+
+import { sep } from "node:path/posix";
 import {
   generateText,
   type JSONValue,
@@ -20,6 +22,7 @@ import {
 import { summarize } from "./context/summarize";
 import { estimateText, estimateTokens } from "./context/tokens";
 import { emit } from "./events";
+import { policy } from "./gate";
 import { model as defaultModel, PRICE_PER_1M } from "./model";
 import { SYSTEM_PROMPT } from "./prompt";
 import { tools } from "./tools";
@@ -56,6 +59,21 @@ type Turn = {
   responseMessages: ModelMessage[];
 };
 
+// A human's answer to and "ask". null means nobody answered before the timeout
+export type Approval = { approved: boolean; note?: string };
+export type Approver = (call: {
+  toolCallId: string;
+  toolName: string;
+  input: unknown;
+}) => Promise<Approval | null>;
+
+// The safe default for runs with no human attachment
+// The durable workflow pases and approver that WAITS for a person instead.
+const denyAll: Approver = async () => ({
+  approved: false,
+  note: "no human approver in this run ",
+});
+
 // `model` and `step` are parameters: tests pass a scripted model and a recording step, for free.
 export async function runAgent(
   task: string,
@@ -66,13 +84,17 @@ export async function runAgent(
     window = WINDOW,
     compaction = COMPACTION,
     summaryModel = model,
+    approver = denyAll,
+    autoApproveWrites = false,
   }: {
     model?: LanguageModel;
     runId?: string;
     step?: Step;
     window?: number; // tests pass a tiny window so compaction fires for free
     compaction?: Compaction; // "summarize" | "truncate"
-    summaryModel?: LanguageModel; // who writes the summary (tests pass a second mock)
+    summaryModel?: LanguageModel; // who writes the summary (tests pass a second mock)}
+    approver?: Approver; // who answers ask decisions (default: nobody -> denied)
+    autoApproveWrites?: boolean; // the gate's session setting: writes need no approval
   } = {},
 ) {
   // Everything OUTSIDE a step must be deterministic: on recovery it runs again and must take the
@@ -134,6 +156,58 @@ export async function runAgent(
 
     const results = [];
     for (const call of res.toolCalls) {
+      // THE GATE: decide before anything runs. policy() is pure, so a replay decides the same way.
+      const decision = policy(call, { autoApproveWrites });
+
+      if (decision === "deny") {
+        consecutiveErrors++;
+        results.push(
+          toolResultPart(call, {
+            ok: false,
+            error: `tool not allowed: ${call.toolName}`,
+          }),
+        );
+        continue;
+      }
+
+      if (decision === "ask") {
+        await step(`ask-${call.toolCallId}`, () =>
+          emit({
+            type: "approval.requested",
+            runId,
+            toolCallId: call.toolCallId,
+            tool: call.toolName,
+            input: call.input,
+          }),
+        );
+
+        const answer = await approver(call);
+        const approved = answer?.approved === true;
+        const reason = answer
+          ? (answer.note ?? (approved ? "approved" : "denied by user"))
+          : "approval time out";
+        await step(`decided-${call.toolCallId}`, () =>
+          emit({
+            type: "approval.decided",
+            runId,
+            toolCallId: call.toolCallId,
+            approved,
+            reason,
+          }),
+        );
+
+        if (!approved) {
+          results.push(
+            toolResultPart(call, {
+              ok: false,
+              denied: true,
+              error: `not approved: ${reason}`,
+            }),
+          );
+          continue;
+        }
+      }
+
       const out = await step(`tool-${call.toolCallId}`, () =>
         toolStep(runId, call),
       );

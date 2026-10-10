@@ -22,10 +22,18 @@ export type AgentEvent =
       ms: number;
     }
   | {
-      type: "approval.requested" | "approval.decided";
+      type: "approval.requested";
       runId: string;
       toolCallId: string;
-      approved?: boolean;
+      tool: string;
+      input: unknown;
+    }
+  | {
+      type: "approval.decided";
+      runId: string;
+      toolCallId: string;
+      approved: boolean;
+      reason: string;
     }
   | {
       type: "memory.compacted";

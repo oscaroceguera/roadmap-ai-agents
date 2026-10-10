@@ -1,13 +1,28 @@
 // The durable version of runAgent: the SAME loop, with every step checkpointed by DBOS.
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { runAgent, type Step } from "./loop";
+import { type Approver, runAgent, type Step } from "./loop";
 
 // The only difference from a plain run: each step's result is saved in Postgres (schema `dbos`).
 const checkpoint: Step = (name, fn) => DBOS.runStep(fn, { name });
 
+// How long a parked approval waits for a human. DBOS.revc's own default is  only 60 SECONDS
+const APPROVAL_TIMEOUT_S = Number(
+  process.env.APPROVAL_TIMEOUT_S ?? 24 * 60 * 60,
+);
+
+const waitForHuman: Approver = (call) =>
+  DBOS.recv<{ approved: boolean; note?: string }>(
+    `approval:${call.toolCallId}`,
+    { timeoutSeconds: APPROVAL_TIMEOUT_S },
+  );
+
 async function agentWorkflowImpl(task: string) {
   // The workflow ID doubles as the runId, so event_log rows and DBOS's tables share one key.
-  return runAgent(task, { runId: DBOS.workflowID!, step: checkpoint });
+  return runAgent(task, {
+    runId: DBOS.workflowID!,
+    step: checkpoint,
+    approver: waitForHuman,
+  });
 }
 
 // Registered at import time, on purpose: DBOS must know every workflow BEFORE launch() recovers them.

@@ -3,7 +3,7 @@
 //import { readFile } from "./tools/readFile";
 // import { writeFile } from "./tools/writeFile";
 import { spawnSync } from "node:child_process";
-import { DBOS } from "@dbos-inc/dbos-sdk";
+import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
 // import { existsSync, readFileSync } from "node:fs";
 import {
   closeEvents,
@@ -166,6 +166,48 @@ switch (cmd) {
       ),
     );
 
+    break;
+  }
+  case "approve": {
+    const [workflowId, toolCallId, answer, note] = args;
+    if (!workflowId || !toolCallId || (answer !== "yes" && answer !== "no")) {
+      console.error(
+        'usage: pnpm start approve <workflowId> <toolCallId> yes|no ["note"]  (see: pnpm start pending)',
+      );
+      process.exit(1);
+    }
+
+    const client = await DBOSClient.create({
+      systemDatabaseUrl: process.env.DATABASE_URL!,
+    });
+    await client.send(
+      workflowId,
+      { approved: answer === "yes", note },
+      `approval:${toolCallId}`,
+    );
+    await client.destroy();
+    console.log(
+      `sent "${answer}" to ${workflowId.slice(0, 8)} / ${toolCallId}`,
+    );
+    break;
+  }
+  case "pending": {
+    // step 16 — approvals waiting for a human, with the command to answer each one
+    const events = await readEvents(500);
+    // Key by run AND tool call: two runs can reuse a toolCallId (the mock model does).
+    const key = (e: { runId: string; toolCallId: string }) =>
+      `${e.runId}/${e.toolCallId}`;
+    const decided = new Set(
+      events.flatMap((e) => (e.type === "approval.decided" ? [key(e)] : [])),
+    );
+    let waiting = 0;
+    for (const e of events) {
+      if (e.type !== "approval.requested" || decided.has(key(e))) continue;
+      waiting++;
+      console.log(`⏸  ${e.tool} ${JSON.stringify(e.input).slice(0, 120)}`);
+      console.log(`   pnpm start approve ${e.runId} ${e.toolCallId} yes|no`);
+    }
+    if (waiting === 0) console.log("no approvals waiting");
     break;
   }
   default:
