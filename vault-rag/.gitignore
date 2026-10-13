@@ -1,0 +1,4 @@
+.env*
+src/generated/
+evals/out/
+node_modules/

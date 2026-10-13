@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: false
+  workerd: false
+minimumReleaseAgeExclude:
+  - '@aws-sdk/credential-provider-node@3.972.86'
