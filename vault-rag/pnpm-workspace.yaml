@@ -1,7 +1,0 @@
-allowBuilds:
-  "@prisma/engines": true
-  esbuild: true
-  prisma: true
-  workerd: true
-minimumReleaseAgeExclude:
-  - "@aws-sdk/credential-provider-node@3.972.86"
