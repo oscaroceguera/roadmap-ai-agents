@@ -29,6 +29,9 @@ importers:
       react-dom:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
+      temporal-polyfill:
+        specifier: 1.0.6
+        version: 1.0.6
     devDependencies:
       '@prisma/cli-engine':
         specifier: 0.7.0
