@@ -15,6 +15,8 @@ export async function POST(req: Request) {
   const content = await file.text();
   const doc = await db.orm.public.Document.create({ name: file.name, content });
 
+  console.log("[POST documents] - doc: ", doc);
+
   return Response.json({ id: doc.id, name: doc.name, length: content.length });
 }
 
@@ -23,7 +25,7 @@ export async function GET() {
     .orderBy((d) => d.createdAt.desc())
     .all();
 
-  console.log("GET docs =>", docs);
+  console.log("[GET documents] - doc: ", docs);
 
   return Response.json(
     docs.map((d) => ({
