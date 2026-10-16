@@ -9,9 +9,9 @@
 - [x] Answer grounded questions with citations (`/api/ask`) + Library/Ask UI
 
 ## Phase 2: PDF text extraction
-- [ ] Choose and add the extraction library (record the choice in the phase spec)
-- [ ] `src/lib/pdf.ts`: extract text per page from a PDF buffer
-- [ ] Vitest tests with small fixture PDFs (single page, multi-page, no text)
+- [x] Choose and add the extraction library: `unpdf` 1.8.1
+- [x] `src/lib/pdf.ts`: extract text per page from a PDF buffer
+- [x] Vitest tests with small fixture PDFs (single page, multi-page, no text)
 
 ## Phase 3: Accept PDF uploads
 - [ ] `POST /api/documents` accepts `.pdf`, extracts the text, and stores it as the document `content`
