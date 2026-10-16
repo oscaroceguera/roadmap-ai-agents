@@ -4,6 +4,11 @@ export function chunkText(
   text: string,
   { maxChars = 1000, overlap = 150 }: ChunkOptions = {},
 ): string[] {
+  // the hard-split loop only advances when maxChars > overlap
+  if (!(maxChars > overlap && overlap >= 0)) {
+    throw new RangeError(`maxChars (${maxChars}) must exceed overlap (${overlap})`);
+  }
+
   const blocks = text
     .replace(/\r\n/g, "\n")
     .split(/\n\s*\n|(?=^#{1,6}\s)/m) // blank lines, or before a heading

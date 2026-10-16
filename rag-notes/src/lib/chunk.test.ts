@@ -22,6 +22,12 @@ describe("chunkText", () => {
     expect(chunks[1].startsWith("# B")).toBe(true);
   });
 
+  it("rejects maxChars that does not exceed overlap", () => {
+    expect(() => chunkText("x", { maxChars: 100 })).toThrow(RangeError);
+    expect(() => chunkText("x", { maxChars: 0, overlap: 0 })).toThrow(RangeError);
+    expect(() => chunkText("x", { maxChars: NaN })).toThrow(RangeError);
+  });
+
   it("lose no text", () => {
     const text = "one\n\ntwo\n\nthree";
     const joined = chunkText(text).join(" ");

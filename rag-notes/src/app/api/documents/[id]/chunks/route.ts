@@ -11,6 +11,12 @@ export async function GET(
   console.log("[GET] - url: ", url);
   const maxChars = Number(url.searchParams.get("maxChars") ?? 1000);
   console.log("[GET] - maxChars: ", maxChars);
+  if (!Number.isInteger(maxChars) || maxChars < 200 || maxChars > 10000) {
+    return Response.json(
+      { error: "maxChars must be a whole number from 200 to 10000" },
+      { status: 400 },
+    );
+  }
 
   const doc = await db.orm.public.Document.where({ id }).first();
   console.log("[GET] - doc: ", doc);
