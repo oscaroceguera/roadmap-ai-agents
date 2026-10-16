@@ -20,6 +20,7 @@ model Chunk {
   document        Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
   index           Int
   content         String
+  page            Int?
   embedding       Embedding?
 
   @@index([documentId])

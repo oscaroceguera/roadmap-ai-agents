@@ -56,6 +56,13 @@
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
+              },
+              "page": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {
@@ -92,6 +99,9 @@
                 },
                 "index": {
                   "column": "index"
+                },
+                "page": {
+                  "column": "page"
                 }
               },
               "namespaceId": "public",
@@ -201,6 +211,11 @@
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
+                },
+                "page": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
                 }
               },
               "foreignKeys": [
@@ -290,7 +305,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "c441276b352227b3d8ced9fe3d8d1448ba4c4b374212e32203627f12f1971b9c",
+    "storageHash": "5d26eadfca2e2b1d3330f69c4f076b8d166ec08085ec4b3c9d4b4c9e41f9304c",
     "types": {
       "Embedding": {
         "codecId": "pg/vector@1",
