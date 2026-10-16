@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Ask } from "./components/Ask";
 
 // TODO: Accept PDF files
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
     <main className="mx-auto max-w-2xl p-8 space-y-4">
       <h1 className="text-2xl font-bold">Chat with your notes</h1>
       <input type="file" accept=".md,.txt" onChange={upload} />
+      <Ask />
       <pre className="text-sm">{status}</pre>
     </main>
   );
