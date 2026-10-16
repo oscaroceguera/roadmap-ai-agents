@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "create-agentsmd": {
+      "source": "oscaroceguera/skills-bucket",
+      "sourceType": "github",
+      "skillPath": "skills/create-agentsmd/SKILL.md",
+      "computedHash": "7c0c5feec70e14d797211d62e18c2dab608b89ea8137e8ed19b8766c4c08179d"
+    },
+    "feature-spec": {
+      "source": "oscaroceguera/skills-bucket",
+      "sourceType": "github",
+      "skillPath": "skills/feature-spec/SKILL.md",
+      "computedHash": "f254fbff340eb0a8d8063311b0925228574d3c388d7ab14bd73146443f41c61e"
+    },
+    "sdd-constitution": {
+      "source": "oscaroceguera/skills-bucket",
+      "sourceType": "github",
+      "skillPath": "skills/sdd-constitution/SKILL.md",
+      "computedHash": "e40a9f19ecdaff9c5d1a39ed062cd4bd0973cfe247d7e3dd0c147b36248c4276"
+    }
+  }
+}
