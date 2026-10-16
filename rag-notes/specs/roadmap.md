@@ -19,10 +19,10 @@
 - [x] Existing `.md`/`.txt` uploads are unchanged; the index flow works on the stored text
 
 ## Phase 4: Page-aware chunks
-- [ ] Add a nullable `page` to `Chunk` in the contract, emit, and add a migration
-- [ ] Chunk PDFs page by page so each chunk records its page; `.md`/`.txt` chunks keep `page` empty
-- [ ] Return `page` from `retrieve()` and `/api/search`
-- [ ] Tests for page-aware chunking
+- [x] Add a nullable `page` to `Chunk` in the contract, emit, and add a migration
+- [x] Chunk PDFs page by page so each chunk records its page; `.md`/`.txt` chunks keep `page` empty
+- [x] Return `page` from `retrieve()` and `/api/search`
+- [x] Tests for page-aware chunking
 
 ## Phase 5: Page citations in answers
 - [ ] `buildContext` labels PDF sources as `name p.N`
