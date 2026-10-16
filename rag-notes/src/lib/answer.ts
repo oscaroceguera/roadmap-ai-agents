@@ -1,15 +1,9 @@
 import OpenAI from "openai";
-import { retrieve, type RetrievedChunk } from "@/lib/retrieve";
+import { retrieve } from "@/lib/retrieve";
+import { buildContext } from "@/lib/context";
 
 const openai = new OpenAI();
 const CHAT_MODEL = "gpt-4o-mini"; // any chat model works
-
-export function buildContext(chunks: RetrievedChunk[]) {
-  console.log("[buildContext] - chunks: ", chunks);
-  return chunks
-    .map((c, i) => `[${i + 1}] (source: ${c.documentName})\n${c.content}`)
-    .join("\n\n---\n\n");
-}
 
 const SYSTEM = `You answer questions using ONLY the context below.
 Rules:

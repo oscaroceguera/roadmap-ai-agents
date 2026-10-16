@@ -5,6 +5,7 @@ type Source = {
   id: string;
   documentName: string;
   index: number;
+  page: number | null;
   similarity: number;
   content: string;
 };
@@ -129,7 +130,8 @@ export function Ask() {
                     <div className="flex justify-between gap-2 font-mono text-xs text-muted">
                       <span>
                         <span className="text-accent">[{i + 1}]</span>{" "}
-                        {s.documentName} · chunk {s.index}
+                        {s.documentName}
+                        {s.page != null && ` · p.${s.page}`} · chunk {s.index}
                       </span>
                       <span className="text-fg">{s.similarity.toFixed(3)}</span>
                     </div>
