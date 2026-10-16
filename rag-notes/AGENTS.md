@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Project
 
-RAG over uploaded notes: upload → chunk → embed → pgvector retrieve → grounded answer. The pipeline lives in `src/lib/` and the routes in `src/app/api/`. See `README.md` for the flow and the API table.
+RAG over uploaded notes (`.md`, `.txt`, and text-based `.pdf`): upload → chunk → embed → pgvector retrieve → grounded answer. The pipeline lives in `src/lib/` and the routes in `src/app/api/`. See `README.md` for the flow and the API table.
 
 This is a step-by-step learning project. The `console.log("[fn] - …")` tracing in every function is deliberate, so match it in new code.
 
@@ -22,10 +22,19 @@ This repo uses Prisma ORM 8 release candidates, which are contract-based. Read `
 - Query through `db` from `@/prisma/db`. Use `db.orm.public.<Model>` for CRUD and `db.sql.public.<Model>…build()` + `db.runtime().query(plan)` for pgvector expressions (see `src/lib/retrieve.ts`). Use `db.transaction(async (tx) => …)` for multi-step writes.
 - Keep `temporal-polyfill/global` imported in `db.ts`, because Prisma's DateTime codecs need `Temporal` and Node 24 does not provide it.
 
+## PDFs
+
+- `src/lib/pdf.ts` is the only code that touches `unpdf`. `readUpload` (`src/lib/upload.ts`) turns `PdfError` codes into user-facing messages and stores a PDF's pages joined by `PAGE_SEPARATOR` (`\f`, from `src/lib/chunk.ts`), blank pages included as empty segments.
+- `chunkDocument()` detects a PDF by its `.pdf` name (case-insensitive), not by the separator, because a one-page PDF has none.
+- Text PDFs only: no OCR, and encrypted or textless PDFs are rejected at upload.
+
 ## Invariants
 
 - The `Embedding = pgvector.Vector(1536)` type in the contract must match `EMBEDDING_MODEL` in `src/lib/embed.ts`. If you change the model, change the dimension, add a migration, and re-index every document.
 - Indexing a document replaces all of its chunks inside one transaction, so re-running it must stay idempotent.
+- A PDF chunk never spans two pages, and `Chunk.page` is its 1-based page. `.md`/`.txt` chunks have `page: null`. `sourceLabel()` in `src/lib/context.ts` turns that into `name p.N` for the model context, and the Ask UI shows `· p.N`.
+- Uploads are capped at `MAX_UPLOAD_BYTES` (4 MB, in `src/lib/limits.ts`, under Vercel's 4.5 MB body limit). `readUpload` enforces it with a `413`, and the Library checks it before sending. Keep `limits.ts` free of dependencies so the client can import it.
+- A failed upload or index leaves no document behind: upload errors happen before the row is created, and the Library calls `DELETE /api/documents/:id` when indexing a new document fails. The index route itself never deletes a document, so a failed re-index keeps the old one.
 - `answer()` must stay grounded: context-only, numbered `[n]` citations, and the exact fallback "I couldn't find that in your notes." for both empty retrieval and a missing answer.
 
 ## Environment
@@ -34,4 +43,4 @@ This repo uses Prisma ORM 8 release candidates, which are contract-based. Read `
 
 ## Verify
 
-Run `pnpm vitest run` for chunking tests, `pnpm lint`, and `pnpm build`. There is no `test` script.
+Run `pnpm vitest run` for the `src/lib` tests (chunking, PDF, upload, context), `pnpm lint`, and `pnpm build`. There is no `test` script.
