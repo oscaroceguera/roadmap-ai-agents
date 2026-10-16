@@ -1,5 +1,5 @@
 import { db } from "@/prisma/db";
-import { chunkText } from "@/lib/chunk";
+import { chunkDocument } from "@/lib/chunk";
 import { embedMany } from "@/lib/embed";
 
 export async function POST(
@@ -12,18 +12,19 @@ export async function POST(
   console.log("[POST] - doc: ", doc);
   if (!doc) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const pieces = chunkText(doc.content);
+  const pieces = chunkDocument(doc.name, doc.content);
   console.log("[POST] - pieces: ", pieces);
-  const vectors = await embedMany(pieces);
+  const vectors = await embedMany(pieces.map((p) => p.content));
   console.log("[POST] - vectors: ", vectors);
 
   await db.transaction(async (tx) => {
     await tx.orm.public.Chunk.where({ documentId: id }).deleteAll();
     await tx.orm.public.Chunk.createAll(
-      pieces.map((content, index) => ({
+      pieces.map(({ content, page }, index) => ({
         documentId: id,
         index,
         content,
+        page,
         embedding: vectors[index],
       })),
     );

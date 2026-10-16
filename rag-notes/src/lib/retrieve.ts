@@ -7,6 +7,7 @@ export type RetrievedChunk = {
   documentId: string;
   documentName: string;
   index: number;
+  page: number | null;
   similarity: number;
 };
 
@@ -22,6 +23,7 @@ export async function retrieve(
     "content",
     "documentId",
     "index",
+    "page",
   )
     .select("similarity", (f, fns) => fns.cosineSimilarity(f.embedding, q))
     .orderBy((f, fns) => fns.cosineDistance(f.embedding, q), {

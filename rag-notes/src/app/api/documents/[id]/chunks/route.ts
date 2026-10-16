@@ -1,5 +1,5 @@
 import { db } from "@/prisma/db";
-import { chunkText } from "@/lib/chunk";
+import { chunkDocument } from "@/lib/chunk";
 
 export async function GET(
   req: Request,
@@ -16,9 +16,14 @@ export async function GET(
   console.log("[GET] - doc: ", doc);
   if (!doc) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const chunks = chunkText(doc.content, { maxChars });
+  const chunks = chunkDocument(doc.name, doc.content, { maxChars });
   console.log("[GET] - chunks: ", chunks);
   return Response.json(
-    chunks.map((c, i) => ({ index: i, length: c.length, content: c })),
+    chunks.map(({ content, page }, i) => ({
+      index: i,
+      page,
+      length: content.length,
+      content,
+    })),
   );
 }

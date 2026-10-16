@@ -85,6 +85,13 @@ describe("chunkDocument", () => {
     }
   });
 
+  it("forwards chunk options to chunkText", () => {
+    const text = Array.from({ length: 20 }, (_, i) => `para ${i}`).join("\n\n");
+    expect(chunkDocument("a.md", text, { maxChars: 30, overlap: 0 }).length).toBe(
+      chunkText(text, { maxChars: 30, overlap: 0 }).length,
+    );
+  });
+
   it("treats a one-page PDF with no separator as page 1", () => {
     const chunks = chunkDocument("a.pdf", "only page");
     expect(chunks).toEqual([{ content: "only page", page: 1 }]);
