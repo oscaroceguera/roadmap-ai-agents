@@ -46,3 +46,25 @@ export function chunkText(
   push();
   return chunks;
 }
+
+// Joins PDF pages in Document.content; segment N (0-based) is page N + 1.
+export const PAGE_SEPARATOR = "\n\f\n";
+
+export type DocumentChunk = { content: string; page: number | null };
+
+export function chunkDocument(name: string, content: string): DocumentChunk[] {
+  if (!/\.pdf$/i.test(name)) {
+    return chunkText(content).map((c) => ({ content: c, page: null }));
+  }
+
+  // PDF text has no paragraph gaps, so each line becomes its own block;
+  // chunking page by page keeps every chunk (and its overlap) on one page.
+  const chunks = content.split(PAGE_SEPARATOR).flatMap((text, i) =>
+    chunkText(text.replace(/\n/g, "\n\n")).map((c) => ({
+      content: c,
+      page: i + 1,
+    })),
+  );
+  console.log("[chunkDocument] - pdf chunks: ", chunks.length);
+  return chunks;
+}

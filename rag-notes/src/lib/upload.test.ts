@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { describe, it, expect } from "vitest";
-import { chunkText } from "./chunk";
-import { PAGE_SEPARATOR, readUpload, UploadError } from "./upload";
+import { chunkText, PAGE_SEPARATOR } from "./chunk";
+import { readUpload, UploadError } from "./upload";
 
 const fixtureFile = async (fixture: string, name = fixture) =>
   new File(

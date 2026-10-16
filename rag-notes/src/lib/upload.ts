@@ -1,7 +1,5 @@
+import { PAGE_SEPARATOR } from "./chunk";
 import { extractPdf, PdfError, type PdfErrorCode } from "./pdf";
-
-// Joins PDF pages in Document.content; segment N (0-based) is page N + 1.
-export const PAGE_SEPARATOR = "\n\f\n";
 
 export class UploadError extends Error {
   constructor(
