@@ -18,6 +18,7 @@ export class PdfError extends Error {
 export function normalizePageText(text: string): string {
   return text
     .replace(/\r\n/g, "\n")
+    .replace(/\u0000/g, "") // unmapped glyphs; Postgres text rejects NUL
     .split("\n")
     .map((line) => line.replace(/[ \t]+/g, " ").trim())
     .join("\n")

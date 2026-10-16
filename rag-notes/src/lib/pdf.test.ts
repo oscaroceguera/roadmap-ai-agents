@@ -40,6 +40,10 @@ describe("normalizePageText", () => {
     expect(normalizePageText("pages 10-\n12")).toBe("pages 10-\n12");
   });
 
+  it("removes NUL characters, which Postgres text rejects", () => {
+    expect(normalizePageText("ca\u0000fé\u0000")).toBe("café");
+  });
+
   it("returns an empty string for whitespace-only input", () => {
     expect(normalizePageText(" \n\t\n ")).toBe("");
   });
