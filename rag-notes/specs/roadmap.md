@@ -14,9 +14,9 @@
 - [x] Vitest tests with small fixture PDFs (single page, multi-page, no text)
 
 ## Phase 3: Accept PDF uploads
-- [ ] `POST /api/documents` accepts `.pdf`, extracts the text, and stores it as the document `content`
-- [ ] Reject PDFs with no extractable text, or encrypted PDFs, with a 400 and a clear message
-- [ ] Existing `.md`/`.txt` uploads are unchanged; the index flow works on the stored text
+- [x] `POST /api/documents` accepts `.pdf`, extracts the text, and stores it as the document `content`
+- [x] Reject PDFs with no extractable text, or encrypted PDFs, with a 400 and a clear message
+- [x] Existing `.md`/`.txt` uploads are unchanged; the index flow works on the stored text
 
 ## Phase 4: Page-aware chunks
 - [ ] Add a nullable `page` to `Chunk` in the contract, emit, and add a migration
