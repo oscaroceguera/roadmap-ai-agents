@@ -1,4 +1,5 @@
 import { db } from "@/prisma/db";
+import { readUpload, UploadError } from "@/lib/upload";
 
 export async function POST(req: Request) {
   const form = await req.formData();
@@ -8,12 +9,18 @@ export async function POST(req: Request) {
     return Response.json({ error: "No file" }, { status: 400 });
   }
 
-  if (!/\.(md|txt)$/i.test(file.name)) {
-    return Response.json({ error: "Only .md or .txt" }, { status: 400 });
+  let upload;
+  try {
+    upload = await readUpload(file);
+  } catch (err) {
+    if (err instanceof UploadError) {
+      return Response.json({ error: err.message }, { status: err.status });
+    }
+    throw err;
   }
 
-  const content = await file.text();
-  const doc = await db.orm.public.Document.create({ name: file.name, content });
+  const { name, content } = upload;
+  const doc = await db.orm.public.Document.create({ name, content });
 
   console.log("[POST documents] - doc: ", doc);
 
