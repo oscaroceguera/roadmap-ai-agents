@@ -1,4 +1,5 @@
 import { PAGE_SEPARATOR } from "./chunk";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "./limits";
 import { extractPdf, PdfError, type PdfErrorCode } from "./pdf";
 
 export class UploadError extends Error {
@@ -38,6 +39,14 @@ export async function readUpload(
   console.log("[readUpload] - file: ", file.name, ext);
 
   if (!ext) throw new UploadError("Only .md, .txt or .pdf files.");
+
+  console.log("[readUpload] - size: ", file.size);
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new UploadError(
+      `This file is too large (max ${MAX_UPLOAD_LABEL}).`,
+      413,
+    );
+  }
 
   const content = ext === "pdf" ? await readPdf(file) : await file.text();
   return { name: file.name, content };

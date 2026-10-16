@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { describe, it, expect } from "vitest";
 import { chunkText, PAGE_SEPARATOR } from "./chunk";
+import { MAX_UPLOAD_BYTES } from "./limits";
 import { readUpload, UploadError } from "./upload";
 
 const fixtureFile = async (fixture: string, name = fixture) =>
@@ -9,10 +10,10 @@ const fixtureFile = async (fixture: string, name = fixture) =>
     name,
   );
 
-async function expectUploadError(file: File, message: string) {
+async function expectUploadError(file: File, message: string, status = 400) {
   const err = await readUpload(file).catch((e) => e);
   expect(err).toBeInstanceOf(UploadError);
-  expect(err.status).toBe(400);
+  expect(err.status).toBe(status);
   expect(err.message).toBe(message);
 }
 
@@ -86,6 +87,33 @@ describe("readUpload errors", () => {
     await expectUploadError(
       new File([new Uint8Array([1, 2, 3])], "bad.pdf"),
       "This file isn't a readable PDF.",
+    );
+  });
+});
+
+describe("readUpload size limit", () => {
+  const TOO_LARGE = "This file is too large (max 4 MB).";
+
+  it("accepts a file of exactly the limit", async () => {
+    const upload = await readUpload(
+      new File(["a".repeat(MAX_UPLOAD_BYTES)], "big.txt"),
+    );
+    expect(upload.content).toHaveLength(MAX_UPLOAD_BYTES);
+  });
+
+  it("rejects a file one byte over the limit", async () => {
+    await expectUploadError(
+      new File(["a".repeat(MAX_UPLOAD_BYTES + 1)], "big.txt"),
+      TOO_LARGE,
+      413,
+    );
+  });
+
+  it("rejects an oversized PDF before parsing it", async () => {
+    await expectUploadError(
+      new File([new Uint8Array(MAX_UPLOAD_BYTES + 1)], "big.pdf"),
+      TOO_LARGE,
+      413,
     );
   });
 });
