@@ -30,7 +30,7 @@
 - [x] Manually check: ask about a known page and confirm the citation matches
 
 ## Phase 6: UI and error handling
-- [ ] The Library file input accepts `.pdf`
-- [ ] Set an upload size limit with a clear error
-- [ ] Show upload/index errors (encrypted, empty, too large) in the UI
-- [ ] Update README and AGENTS.md for PDF support
+- [x] The Library file input accepts `.pdf`
+- [x] Set an upload size limit with a clear error
+- [x] Show upload/index errors (encrypted, empty, too large) in the UI
+- [x] Update README and AGENTS.md for PDF support
