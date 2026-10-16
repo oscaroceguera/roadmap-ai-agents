@@ -25,9 +25,9 @@
 - [x] Tests for page-aware chunking
 
 ## Phase 5: Page citations in answers
-- [ ] `buildContext` labels PDF sources as `name p.N`
-- [ ] The Ask UI shows the page for PDF sources
-- [ ] Manually check: ask about a known page and confirm the citation matches
+- [x] `buildContext` labels PDF sources as `name p.N`
+- [x] The Ask UI shows the page for PDF sources
+- [x] Manually check: ask about a known page and confirm the citation matches
 
 ## Phase 6: UI and error handling
 - [ ] The Library file input accepts `.pdf`
