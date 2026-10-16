@@ -17,7 +17,8 @@
     "openai": "^7.32.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "temporal-polyfill": "1.0.6"
+    "temporal-polyfill": "1.0.6",
+    "unpdf": "^1.8.1"
   },
   "devDependencies": {
     "@prisma/cli-engine": "0.7.0",
