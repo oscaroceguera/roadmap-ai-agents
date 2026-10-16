@@ -18,41 +18,48 @@ export class PdfError extends Error {
 export function normalizePageText(text: string): string {
   return text
     .replace(/\r\n/g, "\n")
-    .replace(/(\w)-\n(\w)/g, "$1$2") // exam-\nple -> example
     .split("\n")
     .map((line) => line.replace(/[ \t]+/g, " ").trim())
     .join("\n")
+    .replace(/(\p{L})-\n(\p{Ll})/gu, "$1$2") // exam-\nple -> example
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-async function loadPdf(data: Uint8Array | ArrayBuffer) {
-  try {
-    return await getDocumentProxy(new Uint8Array(data));
-  } catch (err) {
-    console.log("[extractPdf] - load error: ", err);
-    if (err instanceof Error && err.name === "PasswordException") {
-      throw new PdfError("encrypted", "PDF is password-protected");
-    }
-    throw new PdfError("invalid", "Not a readable PDF");
+function toPdfError(err: unknown): PdfError {
+  if (err instanceof PdfError) return err;
+  console.log("[extractPdf] - error: ", err);
+  if (err instanceof Error && err.name === "PasswordException") {
+    return new PdfError("encrypted", "PDF is password-protected");
   }
+  return new PdfError("invalid", "Not a readable PDF");
 }
 
 export async function extractPdf(
   data: Uint8Array | ArrayBuffer,
 ): Promise<PdfText> {
-  const pdf = await loadPdf(data);
-  const { totalPages, text } = await extractText(pdf, { mergePages: false });
-  console.log("[extractPdf] - totalPages: ", totalPages);
+  // pdf.js transfers the buffer it is given, so hand it a copy
+  const bytes = new Uint8Array(data).slice();
+  let pdf: Awaited<ReturnType<typeof getDocumentProxy>> | undefined;
 
-  const pages = text
-    .map((t, i) => ({ page: i + 1, text: normalizePageText(t) }))
-    .filter((p) => p.text);
-  console.log("[extractPdf] - pages: ", pages);
+  try {
+    pdf = await getDocumentProxy(bytes);
+    const { totalPages, text } = await extractText(pdf, { mergePages: false });
+    console.log("[extractPdf] - totalPages: ", totalPages);
 
-  if (pages.length === 0) {
-    throw new PdfError("no-text", "PDF has no extractable text");
+    const pages = text
+      .map((t, i) => ({ page: i + 1, text: normalizePageText(t) }))
+      .filter((p) => p.text);
+    console.log("[extractPdf] - pages: ", pages);
+
+    if (pages.length === 0) {
+      throw new PdfError("no-text", "PDF has no extractable text");
+    }
+
+    return { pages, totalPages };
+  } catch (err) {
+    throw toPdfError(err);
+  } finally {
+    await pdf?.loadingTask.destroy();
   }
-
-  return { pages, totalPages };
 }

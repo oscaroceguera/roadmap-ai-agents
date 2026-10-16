@@ -28,6 +28,18 @@ describe("normalizePageText", () => {
     expect(normalizePageText("first\n\n\n\nsecond")).toBe("first\n\nsecond");
   });
 
+  it("joins hyphenated words with accented letters", () => {
+    expect(normalizePageText("una café-\nteria")).toBe("una caféteria");
+  });
+
+  it("joins a hyphen followed by trailing spaces", () => {
+    expect(normalizePageText("exam-  \nple")).toBe("example");
+  });
+
+  it("keeps number ranges split across lines", () => {
+    expect(normalizePageText("pages 10-\n12")).toBe("pages 10-\n12");
+  });
+
   it("returns an empty string for whitespace-only input", () => {
     expect(normalizePageText(" \n\t\n ")).toBe("");
   });
@@ -60,6 +72,18 @@ describe("extractPdf", () => {
 
   it("rejects a password-protected PDF as encrypted", async () => {
     await expectPdfError(await fixture("encrypted.pdf"), "encrypted");
+  });
+
+  it("leaves the caller's ArrayBuffer intact", async () => {
+    const bytes = await fixture("single.pdf");
+    const ab = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    );
+
+    await extractPdf(ab);
+
+    expect(ab.byteLength).toBe(bytes.byteLength);
   });
 
   it("rejects bytes that are not a PDF as invalid", async () => {
