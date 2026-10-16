@@ -1,5 +1,13 @@
 "use client";
 import { useState } from "react";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
+
+// The error body, or {} when the response isn't JSON (e.g. a crash page).
+async function errorOf(res: Response): Promise<string | undefined> {
+  const data = await res.json().catch(() => ({}));
+  console.log("[errorOf] - data: ", data);
+  return data.error;
+}
 
 export type Doc = { id: string; name: string; chunks: number };
 
@@ -11,27 +19,43 @@ export function Library({
   onChange: () => Promise<void>;
 }) {
   const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function upload(file: File) {
+    setError("");
+    console.log("[upload] - file: ", file.name, file.size);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`This file is too large (max ${MAX_UPLOAD_LABEL}).`);
+      return;
+    }
+
     setBusy(true);
     setStatus(`Uploading ${file.name}…`);
     try {
       const body = new FormData();
       body.append("file", file);
       const res = await fetch("/api/documents", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      if (!res.ok) throw new Error((await errorOf(res)) ?? "Upload failed");
+      const { id } = await res.json();
 
       setStatus(`Indexing ${file.name}…`);
-      const indexed = await fetch(`/api/documents/${data.id}/index`, { method: "POST" });
-      if (!indexed.ok) throw new Error((await indexed.json()).error ?? "Indexing failed");
+      const indexed = await fetch(`/api/documents/${id}/index`, { method: "POST" });
+      if (!indexed.ok) {
+        const message = (await errorOf(indexed)) ?? "Indexing failed";
+        // roll back the new document so no 0-chunk note is left behind
+        await fetch(`/api/documents/${id}`, { method: "DELETE" }).catch(
+          (err) => console.log("[upload] - rollback failed: ", err),
+        );
+        await onChange();
+        throw new Error(message);
+      }
 
-      setStatus("");
       await onChange();
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
+      setStatus("");
       setBusy(false);
     }
   }
@@ -60,11 +84,13 @@ export function Library({
           <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
         </svg>
         <span className="font-medium">Drop a note or browse</span>
-        <span className="font-mono text-xs text-muted">.md · .txt</span>
+        <span className="font-mono text-xs text-muted">
+          .md · .txt · .pdf · max {MAX_UPLOAD_LABEL}
+        </span>
         <input
           id="upload"
           type="file"
-          accept=".md,.txt"
+          accept=".md,.txt,.pdf"
           disabled={busy}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -78,6 +104,12 @@ export function Library({
       {status && (
         <p role="status" className="m-0 font-mono text-xs text-muted">
           {status}
+        </p>
+      )}
+
+      {error && (
+        <p role="alert" className="m-0 font-mono text-xs text-[#FFB86B]">
+          {error}
         </p>
       )}
 

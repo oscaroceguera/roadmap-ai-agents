@@ -12,23 +12,32 @@ export async function POST(
   console.log("[POST] - doc: ", doc);
   if (!doc) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const pieces = chunkDocument(doc.name, doc.content);
-  console.log("[POST] - pieces: ", pieces);
-  const vectors = await embedMany(pieces.map((p) => p.content));
-  console.log("[POST] - vectors: ", vectors);
+  try {
+    const pieces = chunkDocument(doc.name, doc.content);
+    console.log("[POST] - pieces: ", pieces);
+    const vectors = await embedMany(pieces.map((p) => p.content));
+    console.log("[POST] - vectors: ", vectors);
 
-  await db.transaction(async (tx) => {
-    await tx.orm.public.Chunk.where({ documentId: id }).deleteAll();
-    await tx.orm.public.Chunk.createAll(
-      pieces.map(({ content, page }, index) => ({
-        documentId: id,
-        index,
-        content,
-        page,
-        embedding: vectors[index],
-      })),
+    await db.transaction(async (tx) => {
+      await tx.orm.public.Chunk.where({ documentId: id }).deleteAll();
+      await tx.orm.public.Chunk.createAll(
+        pieces.map(({ content, page }, index) => ({
+          documentId: id,
+          index,
+          content,
+          page,
+          embedding: vectors[index],
+        })),
+      );
+    });
+
+    return Response.json({ documentId: id, chunks: pieces.length });
+  } catch (err) {
+    // the real cause stays in the server log; the UI gets a short message
+    console.log("[POST] - index error: ", err);
+    return Response.json(
+      { error: "Indexing failed. Try again." },
+      { status: 500 },
     );
-  });
-
-  return Response.json({ documentId: id, chunks: pieces.length });
+  }
 }
