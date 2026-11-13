@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "jsconf-basic": {
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/index.js"]
+    }
+  }
+}
