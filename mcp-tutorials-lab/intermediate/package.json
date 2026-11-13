@@ -1,0 +1,60 @@
+{
+  "name": "@oscaroceguera/jsconf-mcp",
+  "version": "0.2.0",
+  "description": "JSConf-style talks catalog as an MCP server (Streamable HTTP on Next.js + stdio bin)",
+  "mcpName": "io.github.oscaroceguera/jsconf-mcp",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "jsconf-mcp": "dist/bin/stdio.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "build:bin": "tsc -p tsconfig.bin.json",
+    "prepublishOnly": "pnpm run build:bin",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "client": "tsx client/demo-client.ts",
+    "validate:server-json": "node scripts/validate-server-json.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.18.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.18.0",
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "mcp-handler": "2.3.0",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oscaroceguera/jsconf-mcp.git"
+  }
+}
